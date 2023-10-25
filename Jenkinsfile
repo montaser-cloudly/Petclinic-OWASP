@@ -1,41 +1,46 @@
 pipeline {
-    agent any 
-    
-    tools{
-        jdk 'jdk11'
-        maven 'maven3'
-    }
-    
+    agent any
     environment {
-        SCANNER_HOME=tool 'sonar-scanner'
+    //    SLACK_CREDENTIAL = 'cloudly-slack-account'
+        DOCKER_REGISTRY = "cloudlyio/petclinic"
+        SCANNER_HOME=tool 'omantel-nestJs'
+    //    DOCKER_EC2_IP = '3.229.56.47'
+    //    DOCKER_APP_NAME = 'health-status'
     }
     
-    stages{
-        
-        stage("Git Checkout"){
-            steps{
-                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/jaiswaladi246/Petclinic.git'
+    
+    tools {
+        jdk "jdk-18"
+        maven "3.9.1"
+    }
+    
+    
+    
+    stages {
+        stage('git-pull') {
+            steps {
+                git branch: 'main', credentialsId: 'github-montaser-cloudly', url: 'https://github.com/montaser-cloudly/Petclinic-OWASP.git'
             }
         }
         
-        stage("Compile"){
-            steps{
+        stage('Code Compile') {
+            steps {
                 sh "mvn clean compile"
             }
         }
         
-         stage("Test Cases"){
-            steps{
+        stage('unit test') {
+            steps {
                 sh "mvn test"
             }
         }
         
         stage("Sonarqube Analysis "){
             steps{
-                withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Petclinic \
+                withSonarQubeEnv('petclinic') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=PetclinicMasum \
                     -Dsonar.java.binaries=. \
-                    -Dsonar.projectKey=Petclinic '''
+                    -Dsonar.projectKey=PetclinicMasum '''
     
                 }
             }
@@ -48,35 +53,65 @@ pipeline {
             }
         }
         
-         stage("Build"){
+        stage("Build"){
             steps{
                 sh " mvn clean install"
             }
         }
+
+// trivy
+
+// stage('Trivy Image Scan') {
+//            steps {
+//                script{
+//                    TEMP_ERROR='${env.STAGE_NAME}'
+//                    sh "trivy image --timeout 10m --exit-code 1 --severity CRITICAL --vuln-type library ${DOCKER_REGISTRY}"
+//                }
+//            }
+//        }
+
+
+
+
+
+
+
         
-        stage("Docker Build & Push"){
+
+        stage("Docker Build"){
             steps{
-                script{
-                   withDockerRegistry(credentialsId: '58be877c-9294-410e-98ee-6a959d73b352', toolName: 'docker') {
-                        
-                        sh "docker build -t image1 ."
-                        sh "docker tag image1 adijaiswal/pet-clinic123:latest "
-                        sh "docker push adijaiswal/pet-clinic123:latest "
-                    }
+                script {
+                    withDockerRegistry(credentialsId: 'cloudly-dockerhub', toolName: 'docker')  {
+                            sh "docker build -t petclinic ."
+                            sh "docker tag petclinic cloudlyio/petclinic:v1"
+                            sh "docker push cloudlyio/petclinic:v1"
+                            }
+                        }
                 }
-            }
         }
-        
-        stage("TRIVY"){
+   }
+
+
+    
+        stage("TRIVY Image Scan"){
             steps{
-                sh " trivy image adijaiswal/pet-clinic123:latest"
+                sh " trivy image $DOCKER_REGISTRY:v1"
             }
         }
-        
+
+
+
+// deploy
+
+
+
         stage("Deploy To Tomcat"){
             steps{
                 sh "cp  /var/lib/jenkins/workspace/CI-CD/target/petclinic.war /opt/apache-tomcat-9.0.65/webapps/ "
             }
         }
-    }
+
+
+    
+}
 }
