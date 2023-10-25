@@ -58,25 +58,7 @@ pipeline {
                 sh " mvn clean install"
             }
         }
-
-// trivy
-
-// stage('Trivy Image Scan') {
-//            steps {
-//                script{
-//                    TEMP_ERROR='${env.STAGE_NAME}'
-//                    sh "trivy image --timeout 10m --exit-code 1 --severity CRITICAL --vuln-type library ${DOCKER_REGISTRY}"
-//                }
-//            }
-//        }
-
-
-
-
-
-
-
-        
+  
 
         stage("Docker Build"){
             steps{
@@ -105,14 +87,14 @@ pipeline {
 
 
 
-        stage("Deploy To Tomcat"){
-            steps{
-                sh "cp  /var/lib/jenkins/workspace/CI-CD/target/petclinic.war /opt/apache-tomcat-9.0.65/webapps/ "
-            }
-        }
+        // stage("Deploy To Tomcat"){
+        //     steps{
+        //         sh "cp  /var/lib/jenkins/workspace/CI-CD/target/petclinic.war /opt/apache-tomcat-9.0.65/webapps/ "
+        //     }
+        // }
 
 
     
-                }
+    }
 
 }
