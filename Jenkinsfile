@@ -80,7 +80,7 @@ pipeline {
         stage("OWASP Dependency Check"){
             steps{
                 dependencyCheck additionalArguments: '--scan ./ --format XML ', odcInstallation: 'DP'
-                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+                dependencyCheckPublisher failedNewCritical: 10, failedNewHigh: 15, failedNewLow: 25, failedNewMedium: 20, failedTotalCritical: 15, failedTotalHigh: 20, failedTotalLow: 20, failedTotalMedium: 25, pattern: 'dependency-check-report.xml', stopBuild: true, unstableNewCritical: 5, unstableNewHigh: 10, unstableNewLow: 20, unstableNewMedium: 15, unstableTotalCritical: 10, unstableTotalHigh: 15, unstableTotalLow: 25, unstableTotalMedium: 20
             }
         }
         
