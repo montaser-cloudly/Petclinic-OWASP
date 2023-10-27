@@ -90,7 +90,9 @@ pipeline {
     
         stage("TRIVY Image Scan"){
             steps{
-                sh " trivy image $DOCKER_REGISTRY:v1"
+                //script {
+                    //withDockerRegistry(credentialsId: 'cloudly-dockerhub', toolName: 'docker')  {
+                    sh " trivy image $DOCKER_REGISTRY:v1"
             }
         }
 
